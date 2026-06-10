@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gastos">
+<meta name="theme-color" content="#0f0f0f">
+<title>Control de Gastos</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #e8ff47;
+    --accent-dark: #0f0f0f;
+    --success: #4ade80;
+    --success-bg: #0d2818;
+    --error: #f87171;
+    --error-bg: #2a0d0d;
+    --radius: 14px;
+    --radius-sm: 9px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
+  }
+
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .badge {
+    font-size: 11px; font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+  }
+  .badge.ok { color: var(--success); border-color: #1a4a2a; background: var(--success-bg); }
+
+  .tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-bottom: 20px;
+    background: var(--surface);
+    padding: 5px;
+    border-radius: var(--radius);
+  }
+  .tab {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text2);
+    transition: all 0.18s;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: var(--accent-dark);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .field-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .importe-wrap { display: flex; align-items: center; gap: 6px; }
+  .euro { font-size: 28px; font-weight: 300; color: var(--text2); }
+  .importe-input {
+    font-size: 38px; font-weight: 600;
+    background: transparent; border: none; outline: none;
+    color: var(--text); width: 100%;
+    letter-spacing: -1px;
+  }
+  .importe-input::placeholder { color: var(--text3); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  .concepto-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-size: 16px; color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .concepto-input:focus { border-color: var(--accent); }
+  .concepto-input::placeholder { color: var(--text3); }
+
+  .cats-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 7px; margin-top: 8px;
+  }
+  .cat-btn {
+    padding: 9px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .cat-btn.selected {
+    background: #1a2e0f;
+    border-color: #2d5c1a;
+    color: var(--success);
+  }
+
+  .metodo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+  .metodo-btn {
+    padding: 11px 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    color: var(--text2);
+    cursor: pointer; text-align: center;
+    transition: all 0.15s;
+  }
+  .metodo-btn.selected {
+    background: #2a1f00;
+    border-color: #5c4400;
+    color: #f5c842;
+  }
+
+  .fecha-input {
+    width: 100%; background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-size: 16px; color: var(--text);
+    outline: none;
+    color-scheme: dark;
+  }
+
+  .save-btn {
+    width: 100%; padding: 17px;
+    background: var(--accent);
+    color: var(--accent-dark);
+    border: none; border-radius: var(--radius);
+    font-size: 17px; font-weight: 700;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: -0.2px;
+  }
+  .save-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .save-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .status {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .status.success { display: block; background: var(--success-bg); color: var(--success); border: 1px solid #1a4a2a; }
+  .status.error { display: block; background: var(--error-bg); color: var(--error); border: 1px solid #4a1a1a; }
+
+  .config-link {
+    font-size: 13px; color: var(--text3);
+    text-align: center; margin-top: 14px;
+    cursor: pointer;
+    display: block;
+    transition: color 0.15s;
+  }
+  .config-link:hover { color: var(--text2); }
+
+  .config-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px;
+    display: none;
+  }
+  .config-panel.open { display: block; }
+
+  .config-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-size: 13px; color: var(--text);
+    outline: none; margin-top: 6px;
+    font-family: monospace;
+    word-break: break-all;
+  }
+  .config-input:focus { border-color: var(--accent); }
+
+  .config-save-btn {
+    margin-top: 10px; padding: 10px 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .config-save-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .config-hint {
+    font-size: 12px; color: var(--text3);
+    margin-top: 10px; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">💸</div>
+      <h1>Gastos</h1>
+    </div>
+    <span class="badge" id="conn-badge">Sin conectar</span>
+  </div>
+
+  <div class="status" id="status-msg"></div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-diego" onclick="selectTab('CUENTAS DIEGO','Diego')">Diego</button>
+    <button class="tab" id="tab-isabel" onclick="selectTab('CUENTAS ISABEL','Isabel')">Isabel</button>
+  </div>
+
+  <div class="card">
+    <span class="field-label">Importe</span>
+    <div class="importe-wrap">
+      <span class="euro">€</span>
+      <input class="importe-input" type="number" id="importe" placeholder="0.00" step="0.01" min="0" inputmode="decimal" />
+    </div>
+    <hr class="divider">
+    <span class="field-label" style="margin-top:4px">Concepto</span>
+    <input class="concepto-input" type="text" id="concepto" placeholder="Ej: Gasolina, Mercadona..." />
+  </div>
+
+  <div class="card">
+    <span class="field-label">Categoría</span>
+    <div class="cats-grid" id="cats-grid"></div>
+  </div>
+
+  <div class="card">
+    <span class="field-label">Método de pago</span>
+    <div class="metodo-row">
+      <button class="metodo-btn selected" id="m-T" onclick="selectMetodo('T')">💳 Tarjeta</button>
+      <button class="metodo-btn" id="m-E" onclick="selectMetodo('E')">💵 Efectivo</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="field-label">Fecha</span>
+    <input class="fecha-input" type="date" id="fecha" />
+  </div>
+
+  <button class="save-btn" id="save-btn" onclick="guardarGasto()">Añadir gasto</button>
+
+  <a class="config-link" onclick="toggleConfig()">⚙ Configurar conexión con Google Sheets</a>
+
+  <div class="config-panel" id="config-panel">
+    <span class="field-label">URL de tu Apps Script</span>
+    <input class="config-input" type="url" id="script-url" placeholder="https://script.google.com/macros/s/XXXX/exec" />
+    <button class="config-save-btn" onclick="saveConfig()">Guardar URL</button>
+    <p class="config-hint">Pega aquí la URL que termina en /exec que obtuviste al publicar el script en Google Sheets.</p>
+  </div>
+
+</div>
+<script>
+const CATS = [
+  'Coche','Donaciones','Formación','Inversión',
+  'Otros','Regalos','Restaurantes/Bar','Ropa',
+  'Salud','Supermercado','Tiempo libre/Ocio',
+  'Trabajo','Traspasos','Viajes'
+];
+
+let selectedTab = 'CUENTAS DIEGO';
+let selectedLabel = 'Diego';
+let selectedCat = '';
+let selectedMetodo = 'T';
+
+function init() {
+  const grid = document.getElementById('cats-grid');
+  CATS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn';
+    btn.textContent = c;
+    btn.id = 'cat-' + c.replace(/[^a-zA-Z]/g,'');
+    btn.onclick = () => selectCat(c);
+    grid.appendChild(btn);
+  });
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+  const url = getUrl();
+  if (url) document.getElementById('script-url').value = url;
+  updateBadge(url);
+}
+
+function getUrl() {
+  try { return localStorage.getItem('gastos_url') || ''; } catch(e) { return ''; }
+}
+
+function updateBadge(url) {
+  const b = document.getElementById('conn-badge');
+  if (url && url.includes('script.google.com')) {
+    b.textContent = '✓ Conectado'; b.className = 'badge ok';
+  } else {
+    b.textContent = 'Sin conectar'; b.className = 'badge';
+  }
+}
+
+function selectTab(tab, label) {
+  selectedTab = tab; selectedLabel = label;
+  document.getElementById('tab-diego').className = 'tab' + (tab === 'CUENTAS DIEGO' ? ' active' : '');
+  document.getElementById('tab-isabel').className = 'tab' + (tab === 'CUENTAS ISABEL' ? ' active' : '');
+}
+
+function selectCat(cat) {
+  selectedCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('cat-' + cat.replace(/[^a-zA-Z]/g,'')).classList.add('selected');
+}
+
+function selectMetodo(m) {
+  selectedMetodo = m;
+  document.getElementById('m-T').classList.toggle('selected', m === 'T');
+  document.getElementById('m-E').classList.toggle('selected', m === 'E');
+}
+
+function toggleConfig() {
+  document.getElementById('config-panel').classList.toggle('open');
+}
+
+function saveConfig() {
+  const url = document.getElementById('script-url').value.trim();
+  try { localStorage.setItem('gastos_url', url); } catch(e) {}
+  updateBadge(url);
+  showStatus('✓ URL guardada correctamente', 'success');
+  document.getElementById('config-panel').classList.remove('open');
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status-msg');
+  el.textContent = msg; el.className = 'status ' + type;
+  setTimeout(() => { el.className = 'status'; }, 4000);
+}
+
+async function guardarGasto() {
+  const importe = document.getElementById('importe').value;
+  const concepto = document.getElementById('concepto').value.trim();
+  const fecha = document.getElementById('fecha').value;
+  if (!importe || parseFloat(importe) <= 0) { showStatus('Introduce un importe válido', 'error'); return; }
+  if (!concepto) { showStatus('Escribe el concepto del gasto', 'error'); return; }
+  if (!selectedCat) { showStatus('Selecciona una categoría', 'error'); return; }
+  const url = getUrl();
+  if (!url) {
+    showStatus('Configura primero la URL del script ⚙', 'error');
+    document.getElementById('config-panel').classList.add('open');
+    return;
+  }
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({
+        hoja: selectedTab,
+        concepto,
+        importe: parseFloat(importe),
+        fecha,
+        categoria: selectedCat,
+        metodo: selectedMetodo
+      })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      showStatus('✓ Gasto añadido en ' + selectedLabel, 'success');
+      document.getElementById('importe').value = '';
+      document.getElementById('concepto').value = '';
+      selectedCat = '';
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+    } else {
+      showStatus('Error: ' + (json.error || 'respuesta inesperada'), 'error');
+    }
+  } catch(e) {
+    showStatus('Error de conexión. Revisa la URL del script.', 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Añadir gasto';
+}
+
+init();
+</script>
+</body>
+</html>
